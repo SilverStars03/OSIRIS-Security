@@ -1,0 +1,93 @@
+import os
+import zipfile
+
+# Define the base path
+base_path = "/mnt/data/OSIRIS-Security-Template"
+
+# Define directory structure
+os.makedirs(f"{base_path}/gui", exist_ok=True)
+
+# CLI Python script (main.py)
+cli_code = '''\
+import argparse
+import time
+
+def laser_defense(mode):
+    print(f"[OSIRIS] Laser Defense System is now {'ENABLED' if mode == 'on' else 'DISABLED'}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="OSIRIS Security CLI")
+    parser.add_argument("--laser-defense", choices=["on", "off"], help="Toggle laser defense system")
+    args = parser.parse_args()
+
+    if args.laser_defense:
+        laser_defense(args.laser_defense)
+    else:
+        print("[OSIRIS] Running in passive monitoring mode...")
+        while True:
+            time.sleep(5)
+            print("[OSIRIS] Monitoring...")
+'''
+
+# Electron main.js
+electron_main = '''\
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: __dirname + '/preload.js'
+    }
+  });
+  win.loadFile('index.html');
+}
+
+app.whenReady().then(createWindow);
+'''
+
+# Preload script (placeholder)
+preload_script = '''\
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("OSIRIS GUI Loaded");
+});
+'''
+
+# HTML file
+html_content = '''\
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSIRIS Security System</title>
+</head>
+<body>
+    <h1>Welcome to OSIRIS</h1>
+    <button onclick="alert('Laser Defense Activated!')">Activate Defense</button>
+</body>
+</html>
+'''
+
+# Write all files
+with open(f"{base_path}/main.py", "w") as f:
+    f.write(cli_code)
+
+with open(f"{base_path}/gui/main.js", "w") as f:
+    f.write(electron_main)
+
+with open(f"{base_path}/gui/preload.js", "w") as f:
+    f.write(preload_script)
+
+with open(f"{base_path}/gui/index.html", "w") as f:
+    f.write(html_content)
+
+# Create a zip archive
+zip_path = "/mnt/data/OSIRIS-RPi5-Template.zip"
+with zipfile.ZipFile(zip_path, 'w') as zipf:
+    for root, dirs, files in os.walk(base_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            arcname = os.path.relpath(file_path, base_path)
+            zipf.write(file_path, arcname)
+
+zip_path
